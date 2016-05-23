@@ -1,46 +1,58 @@
+# Set our logging level
+verb {{ verb }}
+
+# Allow us to call our own scripts for cert verfication
+# and route creation.
+script-security 2
+
+# Be sure to allow pulling options from the server
+pull
+
+# Set our mode, local address, protocol, port, and device
 client
-
-tls-client
-auth SHA256
-cipher AES-256-CBC
-remote-cert-tls server
-{% if openvpn_use_modern_tls %}
-tls-version-min 1.2
-{% endif %}
-
-proto {{openvpn_proto}}
-remote {{inventory_hostname}} {{openvpn_port}}
+nobind
+proto {{ openvpn_proto }}
+port {{ openvpn_port }}
 dev tun
 
-resolv-retry 5
-nobind
-keepalive 5 30
+# Set our remote server
+remote {{ server.ip }}
+
+# Make sure we get a server cert
+remote-cert-tls server
+ns-cert-type server
+
+# Turn on compression
 comp-lzo
-persist-key
-persist-tun
-verb 3
 
-route-method exe
-route-delay 2
-register-dns
+# If we can't resolve the hostname for the server keep re-trying
+resolv-retry infinite
 
-key-direction 1
-<ca>
-{{ ca_cert.content|b64decode }}
-</ca>
+# TLS Auth key for preventing a DOS against the TLS handshake
+# TODO(del): add this back in.
+# tls-auth /etc/openvpn/keys/tls-auth
 
-<tls-auth>
-{{ tls_auth.content|b64decode }}
-</tls-auth>
+# Openvpn only reads CRL files at start.
+# Run our own script to verify the cert against the CRLs
+# tls-export-cert /etc/openvpn/peer_cert
+# tls-verify /etc/openvpn/scripts/tls-verify
 
-<cert>
-{{ item.0.content|b64decode }}
-</cert>
+# Our CA chain
+# capath /etc/openvpn/capath
+ca {{ssl_certpath}}/{{ca_crt}}
 
-<key>
-{{ item.1.content|b64decode }}
-</key>
+# Our cert
+cert {{ssl_certpath}}/{{client.crt}}
 
-{% if openvpn_verify_cn %}
-verify-x509-name OpenVPN-Server-{{inventory_hostname}} name
-{% endif %}
+# Our key
+key {{ssl_keypath}}/{{client.key}}
+
+# Don't bring up the interface or routes normally.
+# This allows us to "hide" the VPN network and
+# use it as a pure transit network.
+# ifconfig-noexec
+# up /etc/openvpn/scripts/if-up
+# route-noexec
+# route-up /etc/openvpn/scripts/route-up
+
+askpass /etc/openvpn/client.pass

@@ -15,6 +15,7 @@
   include: server_keys.yml
   tags:
     - server_keys
+    - server
 
 # ignoreerrors is required for CentOS/RHEL 6
 # http://serverfault.com/questions/477718/sysctl-p-etc-sysctl-conf-returns-error
@@ -45,12 +46,13 @@
   tags:
     - firewall
 
-- name: generate client configs
+- name: Generate client configs
   include: client_keys.yml
   when: clients is defined
   tags:
     - client_keys
-
+    - client
+ 
 - name: configure OpenVPN
   include: config.yml
   tags:

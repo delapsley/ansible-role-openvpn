@@ -19,7 +19,7 @@
     state=absent
 
 - name: Uninstall OpenVPN
-  package: >
+  yum: >
     name=openvpn
     state=absent
 

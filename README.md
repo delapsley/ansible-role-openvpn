@@ -7,6 +7,7 @@ Tested OSes:
 - Fedora 20/21
 - CentOS 6
 - Ubuntu trusty (14.04)
+- RHEL7.2
 
 Should be working OSes:
 - All Fedora
@@ -24,12 +25,7 @@ Ubuntu precise has a [weird bug](https://bugs.launchpad.net/ubuntu/+source/iptab
 Role Variables
 --------------
 
-openvpn_port: The port you want OpenVPN to run on.
-If you have different ports on different servers, I suggest you set the port in your inventory file.
-
-openvpn_proto: The protocol you want OpenVPN to use (UDP by default)
-
-openvpn\_config\_file: The config file name you want to use (By default `openvpn_{{ openvpn_proto }}_{{ openvpn_port }}`, located in vars/main.yml)
+TBD
 
 Dependencies
 ------------
@@ -39,10 +35,134 @@ Does not depend on any other roles
 Example Playbook
 ----------------
 
-    - hosts: vpn
+    - name: Deploy openvpn server
+      hosts: vpnserver
+      sudo: yes
       roles:
-        - {role: kyl191.openvpn, clients: [client1, client2],
-                            openvpn_port: 4300}
+          - { role: cisco.resolv_conf, sudo: yes }
+          - { role: martian.bootrhel, sudo: yes }
+          - role: ansible-role-openvpn
+            tls_auth: |
+              thisiscool
+            client:
+              config_file: /etc/openvpn/client.ovpn
+              passphrase: metacloud
+              crt: client.pem
+              key: client.key
+              ssl_certs_inventory:
+                # ca.key
+                - name: ca
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+                - name: client
+                  combined: yes
+                  key: |
+                    -----BEGIN RSA PRIVATE KEY-----
+                    -----END RSA PRIVATE KEY-----
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+            server:
+              ip: 172.16.10.101
+              net: 10.8.0.0
+              mask: 255.255.255.0
+              duplicate_cn: yes
+              config_file: /etc/openvpn/server.conf
+              passphrase: metacloud
+              crt: server.pem
+              key: server.key
+              dh:
+                name: dh2048.pem
+                content: |
+                  -----BEGIN DH PARAMETERS-----
+                  -----END DH PARAMETERS-----
+              ssl_certs_inventory:
+                # ca.key
+                - name: ca
+                  combined: yes
+                  key: |
+                    -----BEGIN RSA PRIVATE KEY-----
+                    -----END RSA PRIVATE KEY-----
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+                  crl: |
+                    -----BEGIN X509 CRL-----
+                    -----END X509 CRL-----
+                - name: server
+                  combined: yes
+                  key: |
+                    -----BEGIN RSA PRIVATE KEY-----
+                    -----END RSA PRIVATE KEY-----
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+    - name: Deploy openvpn client
+      hosts: vpnclient
+      sudo: yes
+      roles:
+          - { role: cisco.resolv_conf, sudo: yes }
+          - { role: martian.bootrhel, sudo: yes }
+          - role: ansible-role-openvpn
+            client: yes
+            tls_auth: |
+              thisiscool
+            client:
+              config_file: /etc/openvpn/client.ovpn
+              passphrase: metacloud
+              crt: client.pem
+              key: client.key
+              ssl_certs_inventory:
+                # ca.key
+                - name: ca
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+                - name: client
+                  combined: yes
+                  key: |
+                    -----BEGIN RSA PRIVATE KEY-----
+                    -----END RSA PRIVATE KEY-----
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+            server:
+              ip: 172.16.10.101
+              net: 10.8.0.0
+              mask: 255.255.255.0
+              duplicate_cn: yes
+              config_file: /etc/openvpn/server.conf
+              passphrase: metacloud
+              crt: server.pem
+              key: server.key
+              dh:
+                name: dh2048.pem
+                content: |
+                  -----BEGIN DH PARAMETERS-----
+                  -----END DH PARAMETERS-----
+              ssl_certs_inventory:
+                # ca.key
+                - name: ca
+                  combined: yes
+                  key: |
+                    -----BEGIN RSA PRIVATE KEY-----
+                    -----END RSA PRIVATE KEY-----
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+                  crl: |
+                    -----BEGIN X509 CRL-----
+                    -----END X509 CRL-----
+                - name: server
+                  combined: yes
+                  key: |
+                    -----BEGIN RSA PRIVATE KEY-----
+                    -----END RSA PRIVATE KEY-----
+                  cert: |
+                    -----BEGIN CERTIFICATE-----
+                    -----END CERTIFICATE-----
+
 
 License
 -------
@@ -53,3 +173,4 @@ Author Information
 ------------------
 
 Written by Kyle Lexmond
+Modified by David Lapsley

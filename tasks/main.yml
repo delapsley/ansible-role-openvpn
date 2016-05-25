@@ -46,9 +46,22 @@
   tags:
     - firewall
 
+- name: Create openvpn server directories
+  file: 
+    path='{{item}}'
+    state=directory
+    owner=root
+    group=root
+    mode=0700
+  with_items:
+    - '{{ ssl_capath }}'
+    - '{{ ssl_certpath }}'
+    - '{{ ssl_keypath }}'
+    - '{{ ssl_scriptpath }}'
+
 - name: Generate client configs
   include: client_keys.yml
-  when: clients is defined
+  when: client is defined
   tags:
     - client_keys
     - client

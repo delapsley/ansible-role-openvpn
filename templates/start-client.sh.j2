@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Only intended for testing
+
+route delete default
+route add default gw {{ ansible_eth0.ipv4.address }}
+
+/usr/sbin/openvpn \
+    --cd /etc/openvpn \
+    --config /etc/openvpn/client.ovpn \
+    --verb 6 \
+    --dev tun

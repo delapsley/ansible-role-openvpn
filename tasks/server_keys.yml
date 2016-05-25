@@ -1,15 +1,3 @@
-- name: create openvpn server directories
-  file: 
-    path='{{item}}'
-    state=directory
-    owner=root
-    group=root
-    mode=0700
-  with_items:
-    - '{{ ssl_capath }}'
-    - '{{ ssl_certpath }}'
-    - '{{ ssl_keypath }}'
-
 - name: Create files from keys in inventory
   copy: content='{{ item.key }}'
         dest={{ ssl_keypath }}/{{ item.name }}.key

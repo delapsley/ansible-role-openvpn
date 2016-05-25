@@ -36,6 +36,7 @@
         owner=root
         group=root
         mode=400
+
 # - name: Copy openssl extensions
 #   copy: >
 #     src=openssl-client.ext
@@ -74,13 +75,21 @@
 #   with_items: "{{clients}}"
 #   register: client_keys
 
-- name: generate client config
+- name: Generate client config
   template: >
     src=client.ovpn.j2
     dest=/etc/openvpn/client.ovpn
     owner=root
     group=root
     mode=0400
+
+- name: Copy scripts
+  template: >
+    src=start-client.sh.j2
+    dest='{{ssl_scriptpath}}'
+    owner=root
+    group=root
+    mode=0555
 
   # - name: fetch client config
   #   fetch: >
